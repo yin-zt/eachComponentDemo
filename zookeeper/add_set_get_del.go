@@ -62,3 +62,90 @@ func main() {
 		fmt.Println("falied delete root, info: ", stat.Version, err.Error())
 	}
 }
+
+// WatchHostsByPath 监控节点变化
+func WatchHostsByPath(path string, conn *zk.Conn) (chan []string, chan error) {
+	snapshots := make(chan []string) // 变动后的挂载目标列表
+	errors := make(chan error)       // 变动错误信息
+	go func() {
+		for {
+			snapshot, _, events, err := conn.ChildrenW(path)
+			if err != nil {
+				errors <- err
+			}
+			snapshots <- snapshot
+			// 阻塞直到出现事件消息(可以不用select)
+			select {
+			case evt := <-events:
+				if evt.Err != nil {
+					errors <- evt.Err
+				}
+				fmt.Printf("ChildrenW Event Path:%v, Type:%v\n", evt.Path, evt.Type)
+			}
+		}
+	}()
+	return snapshots, errors
+}
+
+// WatchDataByPath 监控节点内容变化
+func WatchDataByPath(nodePath string, conn *zk.Conn) (chan []byte, chan error) {
+	//conn := z.conn
+	snapshots := make(chan []byte)
+	errors := make(chan error)
+	go func() {
+		for {
+			data, _, events, err := conn.GetW(nodePath)
+			if err != nil {
+				errors <- err
+			}
+			snapshots <- data
+			select {
+			case evt := <-events:
+				if evt.Err != nil {
+					errors <- evt.Err
+					return
+				}
+				fmt.Printf("GetW Event Path:%v, Type:%v\n", evt.Path, evt.Type)
+			}
+		}
+	}()
+	return snapshots, errors
+}
+
+// RegistHostOnPath 将主机挂载在路径上(节点上)
+func RegistHostOnPath(nodePath, host string, conn *zk.Conn) (err error) {
+	// 1. 若路径不存在则新建
+	ex, _, err := conn.Exists(nodePath)
+	if err != nil {
+		return
+	}
+	if !ex {
+		_, err = conn.Create(nodePath, nil, 0, zk.WorldACL(zk.PermAll))
+		if err != nil {
+			return
+		}
+	}
+	// 2. 将主机进行挂载(路径为永久、主机为临时); 临时会检测主机的存活并清理
+	subNodePath := fmt.Sprintf("%s/%s", nodePath, host)
+	// 2.1 主机是否已挂载, 没挂则挂
+	if ex, _, _ := conn.Exists(subNodePath); !ex {
+		_, err = conn.Create(subNodePath, nil, zk.FlagEphemeral, zk.WorldACL(zk.PermAll))
+	}
+	return
+}
+
+// UpdatePathData 有则更新、无则新建节点并配置内容
+func UpdatePathData(nodePath string, config []byte, version int32, conn *zk.Conn) (err error) {
+	ex, _, _ := conn.Exists(nodePath)
+	if !ex {
+		conn.Create(nodePath, config, 0, zk.WorldACL(zk.PermAll))
+		return nil
+	}
+	// 需要版本才能更新
+	_, stat, err := conn.Get(nodePath)
+	if err != nil {
+		return
+	}
+	_, err = conn.Set(nodePath, config, stat.Version)
+	return
+}
