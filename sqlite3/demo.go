@@ -5,7 +5,6 @@ import (
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/prometheus/common/log"
-
 	"sync"
 )
 
@@ -18,6 +17,7 @@ type SQLiteCache struct {
 	SQLite *sql.DB
 }
 
+// go env -w CGO_ENABLED=1 需要配合CGO_ENABLED
 func main() {
 	if db, err := sql.Open("sqlite3", ":memory:"); err == nil {
 		db.SetMaxOpenConns(1)
