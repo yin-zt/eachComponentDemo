@@ -36,7 +36,7 @@ func main() {
 	fmt.Println("text: ", string(data), stat.Version)
 
 	// 4.修改根
-	if _, err = conn.Set("/root1", []byte("update text"), stat.Version); err != nil {
+	if _, err = conn.Set("/root1", []byte("update text11"), stat.Version); err != nil {
 		fmt.Println("failed update root")
 	}
 
