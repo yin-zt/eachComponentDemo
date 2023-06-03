@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+var (
+	resp any
+)
+
 func main() {
 	pool := &redis.Pool{
 		MaxIdle:     16,
@@ -39,11 +43,27 @@ func main() {
 
 	conn := pool.Get()
 	defer conn.Close()
-	conn.Do("hset", "books", "hello", "world")
-	val, err := redis.String(conn.Do("hget", "books", "hello"))
+	//var cursor uint64
+
+	//conn.Do("hset", "books", "hello", "world")
+	//val, err := redis.String(conn.Do("hget", "books", "hello"))
+	//val, err := redis.String(conn.Do("scan", cursor, "books"))
+
+	var keys []string
+	cursor := 0
+	values, err := redis.Values(conn.Do("SCAN", cursor, "MATCH", "book*"))
+	if err != nil {
+		resp = err
+		panic(resp)
+	}
+	fmt.Println(cursor)
+	cursor, _ = redis.Int(values[0], nil)
+	scanKeys, _ := redis.Strings(values[1], nil)
+	keys = append(keys, scanKeys...)
+
 	if err != nil {
 		log.Error(err)
 	}
 	conn.Close()
-	fmt.Println(val)
+	//fmt.Println(val)
 }

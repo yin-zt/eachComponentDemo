@@ -17,8 +17,8 @@ type RedisPool struct {
 	Pool *redis.Pool
 }
 
-// NewRedisPooler 用于生成一个redis连接池
-func NewRedisPooler() *RedisPool {
+// NewRedisPooler1 用于生成一个redis连接池
+func NewRedisPooler1() *RedisPool {
 	pool := &redis.Pool{
 		MaxIdle:     16,
 		MaxActive:   1024,

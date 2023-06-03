@@ -35,32 +35,32 @@ func main() {
 	}
 	fmt.Println("text: ", string(data), stat.Version)
 
-	// 4.修改根
-	if _, err = conn.Set("/root1", []byte("update text11"), stat.Version); err != nil {
-		fmt.Println("failed update root")
-	}
-
-	// 5.设置子节点(必须要有根/父节点)
-	if _, err = conn.Create("/root1/subnode", []byte("node_text"), 0, zk.WorldACL(zk.PermAll)); err != nil {
-		fmt.Println("failed add subnode, info: ", err.Error())
-	}
-	// 6.获取子节点列表
-	childNodes, _, err := conn.Children("/root1")
-	if err != nil {
-		fmt.Println("failed get node list, info: ", err.Error())
-	} else {
-		fmt.Println("node list: ", childNodes)
-	}
-
-	// 6.删除根(必须先查后删, 删完子才能删父节点)
-	_, stat, _ = conn.Get("/root1/subnode")
-	if err := conn.Delete("/root1/subnode", stat.Version); err != nil {
-		fmt.Println("falied delete node, info: ", stat.Version, err.Error())
-	}
-	_, stat, _ = conn.Get("/root1")
-	if err := conn.Delete("/root1", stat.Version); err != nil {
-		fmt.Println("falied delete root, info: ", stat.Version, err.Error())
-	}
+	//// 4.修改根
+	//if _, err = conn.Set("/root1", []byte("update text11"), stat.Version); err != nil {
+	//	fmt.Println("failed update root")
+	//}
+	//
+	//// 5.设置子节点(必须要有根/父节点)
+	//if _, err = conn.Create("/root1/subnode", []byte("node_text"), 0, zk.WorldACL(zk.PermAll)); err != nil {
+	//	fmt.Println("failed add subnode, info: ", err.Error())
+	//}
+	//// 6.获取子节点列表
+	//childNodes, _, err := conn.Children("/root1")
+	//if err != nil {
+	//	fmt.Println("failed get node list, info: ", err.Error())
+	//} else {
+	//	fmt.Println("node list: ", childNodes)
+	//}
+	//
+	//// 6.删除根(必须先查后删, 删完子才能删父节点)
+	//_, stat, _ = conn.Get("/root1/subnode")
+	//if err := conn.Delete("/root1/subnode", stat.Version); err != nil {
+	//	fmt.Println("falied delete node, info: ", stat.Version, err.Error())
+	//}
+	//_, stat, _ = conn.Get("/root1")
+	//if err := conn.Delete("/root1", stat.Version); err != nil {
+	//	fmt.Println("falied delete root, info: ", stat.Version, err.Error())
+	//}
 }
 
 // WatchHostsByPath 监控节点变化
